@@ -9,6 +9,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Connects to your Render Postgres instance
+print(f"DEBUG: DATABASE_URL is: {DATABASE_URL[:15]}...")
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()

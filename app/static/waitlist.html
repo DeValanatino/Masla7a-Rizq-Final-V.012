@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مصلحة رزق — قائمة الانتظار</title>
+    <!-- Google Fonts: Cairo (Perfect Arabic Typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient-start: #0c1817;
+            --bg-gradient-end: #050a0a;
+            --panel-bg: rgba(20, 38, 36, 0.85);
+            --panel-border: rgba(229, 184, 105, 0.15);
+            --accent-gold: #e5b869;
+            --accent-gold-hover: #f3d498;
+            --action-green: #10b981;
+            --action-green-hover: #059669;
+            --action-red: #ef4444;
+            --action-red-hover: #dc2626;
+            --text-light: #f0f5f4;
+            --text-muted: #8fa3a1;
+            --keypad-bg: #112220;
+            --keypad-key-bg: #193230;
+            --keypad-key-active: #244946;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: radial-gradient(circle at top, var(--bg-gradient-start), var(--bg-gradient-end));
+            background-color: var(--bg-gradient-end);
+            color: var(--text-light);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            direction: rtl;
+        }
+
+        html {
+            height: -webkit-fill-available;
+        }
+
+        /* Container designed to fit mobile phones perfectly, centered on desktop */
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            height: 100vh;
+            height: -webkit-fill-available;
+            background: rgba(8, 16, 15, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        /* Screen Wrapper */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            z-index: 1;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+            z-index: 2;
+        }
+
+        /* Header UI (Universally clear progress visualizer) */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(229, 184, 105, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent-gold);
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            letter-spacing: 0.5px;
+        }
+
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: background-color 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--accent-gold);
+            box-shadow: 0 0 10px var(--accent-gold);
+        }
+
+        /* Content Layouts */
+        .screen-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .screen-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .screen-subtitle {
+            font-size: 16px;
+            font-weight: 400;
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: -5px;
+            line-height: 1.4;
+        }
+
+        /* --- SCREEN 1: IDENTITY GRID --- */
+        .identity-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            width: 100%;
+            max-width: 380px;
+            margin-top: 10px;
+        }
+
+        .grid-btn {
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 20px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .grid-btn:active {
+            transform: scale(0.95);
+            border-color: var(--accent-gold);
+            background: rgba(229, 184, 105, 0.1);
+        }
+
+        .grid-btn svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--text-light);
+            transition: fill 0.2s ease;
+        }
+
+        .grid-btn:active svg {
+            fill: var(--accent-gold);
+        }
+
+        .grid-btn-label {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* --- INPUT SCREENS (2 & 3) --- */
+        .input-display-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-helper-icon {
+            width: 80px;
+            height: 80px;
+            fill: var(--accent-gold);
+            filter: drop-shadow(0 4px 10px rgba(229, 184, 105, 0.2));
+            animation: pulse-slow 2s infinite ease-in-out;
+        }
+
+        .numeric-display {
+            background: rgba(0, 0, 0, 0.4);
+            border: 2px solid var(--panel-border);
+            border-radius: 16px;
+            width: 100%;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: var(--text-light);
+            text-shadow: 0 0 10px rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .numeric-display:focus-within {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 15px rgba(229, 184, 105, 0.2);
+        }
+
+        /* Typing cursor effect */
+        .cursor-blink {
+            display: inline-block;
+            width: 3px;
+            height: 35px;
+            background-color: var(--accent-gold);
+            margin-right: 4px;
+            animation: blink 1s step-end infinite;
+        }
+
+        /* Custom On-screen Keypad */
+        .custom-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 360px;
+            margin-top: 10px;
+            padding: 10px;
+            background: var(--keypad-bg);
+            border-radius: 24px;
+            border: 1px solid rgba(229, 184, 105, 0.05);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        .keypad-btn {
+            background: var(--keypad-key-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            height: 60px;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.1s ease, transform 0.1s ease;
+            color: var(--text-light);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .keypad-btn:active {
+            background: var(--keypad-key-active);
+            transform: scale(0.92);
+        }
+
+        .keypad-num {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .keypad-ar-num {
+            font-size: 14px;
+            color: var(--accent-gold);
+            font-weight: 600;
+            margin-top: -2px;
+        }
+
+        .keypad-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-light);
+        }
+
+        .keypad-btn.action-clear {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        .keypad-btn.action-clear:active {
+            background: rgba(239, 68, 68, 0.3);
+        }
+        .keypad-btn.action-clear svg {
+            fill: var(--action-red);
+        }
+
+        /* --- BOTTOM CONTROL BAR --- */
+        .bottom-controls {
+            width: 100%;
+            display: flex;
+            gap: 16px;
+            margin-top: auto;
+            padding-top: 15px;
+        }
+
+        .btn-action {
+            flex: 1;
+            height: 70px;
+            border-radius: 20px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .btn-green {
+            background: var(--action-green);
+            color: #ffffff;
+        }
+
+        .btn-green:hover:not(:disabled) {
+            background: var(--action-green-hover);
+        }
+
+        .btn-green:disabled {
+            background: #1e3a34;
+            color: rgba(255,255,255,0.2);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-green:disabled svg {
+            fill: rgba(255,255,255,0.1) !important;
+        }
+
+        .btn-red {
+            background: var(--action-red);
+            color: #ffffff;
+            max-width: 90px; /* Compact X button */
+        }
+
+        .btn-red:hover {
+            background: var(--action-red-hover);
+        }
+
+        .btn-action svg {
+            width: 32px;
+            height: 32px;
+            fill: #ffffff;
+        }
+
+        /* --- SCREEN 3 specific animations --- */
+        .ringing-animation {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .ring-wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: ring-ripple 1.5s infinite ease-out;
+            opacity: 0;
+        }
+
+        .ring-wave:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+
+        .ring-wave:nth-child(3) {
+            animation-delay: 1s;
+        }
+
+        .ringing-phone-icon {
+            width: 60px;
+            height: 60px;
+            fill: var(--accent-gold);
+            z-index: 2;
+            animation: ring-shake 0.5s infinite ease-in-out;
+        }
+
+        /* --- SCREEN 4: SUCCESS --- */
+        .success-checkmark {
+            width: 120px;
+            height: 120px;
+            background: rgba(16, 185, 129, 0.1);
+            border: 4px solid var(--action-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+            animation: scale-up-bounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .success-checkmark svg {
+            width: 64px;
+            height: 64px;
+            fill: var(--action-green);
+        }
+
+        .velvet-rope-graphic {
+            width: 180px;
+            height: 120px;
+            fill: var(--accent-gold);
+            opacity: 0.85;
+            margin: 10px 0;
+            filter: drop-shadow(0 8px 15px rgba(229, 184, 105, 0.15));
+        }
+
+        /* Toast notifications for feedback */
+        .toast {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50px);
+            background: rgba(239, 68, 68, 0.95);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 85%;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 10, 10, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(229, 184, 105, 0.2);
+            border-top: 5px solid var(--accent-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes blink {
+            from, to { background-color: transparent }
+            50% { background-color: var(--accent-gold) }
+        }
+
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.06); opacity: 1; }
+        }
+
+        @keyframes ring-ripple {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        @keyframes ring-shake {
+            0%, 100% { transform: rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(-8deg); }
+            20%, 40%, 60%, 80% { transform: rotate(8deg); }
+        }
+
+        @keyframes scale-up-bounce {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Accessibility: custom styling for active buttons on touch devices */
+        @media (hover: hover) {
+            .grid-btn:hover {
+                border-color: var(--accent-gold);
+                box-shadow: 0 10px 20px rgba(229, 184, 105, 0.15);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification for Errors -->
+    <div id="toast" class="toast">يرجى إدخال رقم صحيح</div>
+
+    <div class="app-container">
+        <!-- API LOADING SCREEN -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- PROGRESS HEADER -->
+        <div class="app-header" style="margin: 24px 24px 0 24px;">
+            <div class="logo-section">
+                <!-- Golden Handshake / Construct Logo SVG -->
+                <svg class="logo-icon" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H7c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.04-.42 1.99-1.07 2.75z"/>
+                </svg>
+                <span class="logo-text">مصلحة رزق</span>
+            </div>
+            <div class="progress-dots" id="progress-dots">
+                <div class="dot active" data-step="1"></div>
+                <div class="dot" data-step="2"></div>
+                <div class="dot" data-step="3"></div>
+                <div class="dot" data-step="4"></div>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 1: IDENTITY SELECTOR ================= -->
+        <div id="screen-1" class="screen active">
+            <div class="screen-content">
+                <h1 class="screen-title">من أنت؟</h1>
+                <p class="screen-subtitle">اضغط على صورتك للبدء</p>
+                
+                <div class="identity-grid">
+                    <!-- BUTTON 1: FACTORY -->
+                    <div class="grid-btn" data-identity="Factory">
+                        <!-- Factory SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M22 21H2V3l7 4 5-4 8 5v13zm-10-6h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 0H6v2h2v-2zm8-4h-2v2h2v-2zm-4 0h-2v2h2v-2zm-4 0H6v2h2v-2z"/>
+                        </svg>
+                        <span class="grid-btn-label">مصنع</span>
+                    </div>
+
+                    <!-- BUTTON 2: WORKSHOP (Wood Saw) -->
+                    <div class="grid-btn" data-identity="Craftsman">
+                        <!-- Wood Circular Saw / Cog SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19.5 12c0-.23-.01-.45-.03-.68l1.86-1.41c.17-.13.22-.37.1-.56l-1.75-3.03c-.11-.19-.35-.26-.54-.19l-2.19.88c-.46-.35-.95-.64-1.5-.87l-.33-2.33c-.03-.21-.21-.37-.43-.37h-3.5c-.22 0-.4.16-.43.37l-.33 2.33c-.55.23-1.04.52-1.5.87l-2.19-.88c-.19-.07-.43.01-.54.19L4.57 9.35c-.11.19-.07.43.1.56l1.86 1.41c-.02.23-.03.45-.03.68s.01.45.03.68l-1.86 1.41c-.17.13-.22.37-.1.56l1.75 3.03c.11.19.35.26.54.19l2.19-.88c.46.35.95.64 1.5.87l.33 2.33c.03.21.21.37.43.37h3.5c.22 0 .4-.16.43-.37l.33-2.33c.55-.23 1.04-.52 1.5-.87l2.19.88c.19.07.43-.01.54-.19l1.75-3.03c.11-.19.07-.43-.1-.56l-1.86-1.41c.02-.23.03-.45.03-.68zm-7.5 3c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+                        </svg>
+                        <span class="grid-btn-label">صنايعي</span>
+                    </div>
+
+                    <!-- BUTTON 3: TRUCK -->
+                    <div class="grid-btn" data-identity="Project Manager">
+                        <!-- Truck SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM17 12V9.5h2.5l1.97 2.5H17z"/>
+                        </svg>
+                        <span class="grid-btn-label">عربية نقل</span>
+                    </div>
+
+                    <!-- BUTTON 4: STOREFRONT -->
+                    <div class="grid-btn" data-identity="Gallery">
+                        <!-- Storefront SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2c0 .8.56 1.54 1.3 1.8.1.3.2.7.2 1.2v3h12v-3c0-.5.1-.9.2-1.2.74-.26 1.3-.98 1.3-1.8zm-11 4H6v-3h4v3zm6 0h-4v-3h4v3z"/>
+                        </svg>
+                        <span class="grid-btn-label">معرض</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 2: PHONE NUMBER CAPTURE ================= -->
+        <div id="screen-2" class="screen">
+            <div class="screen-content">
+                <svg class="input-helper-icon" viewBox="0 0 24 24">
+                    <path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/>
+                </svg>
+                <h1 class="screen-title">رقم الهاتف</h1>
+                <p class="screen-subtitle">اكتب رقم تليفونك المكون من ١١ رقمًا</p>
+
+                <!-- Custom Numeric Display with blinking cursor -->
+                <div class="input-display-container">
+                    <div class="numeric-display" id="phone-display">
+                        <span id="phone-text"></span><span class="cursor-blink"></span>
+                    </div>
+                </div>
+
+                <!-- Custom on-screen keypad -->
+                <div class="custom-keypad" id="phone-keypad">
+                    <button class="keypad-btn" data-num="1"><span class="keypad-num">1</span><span class="keypad-ar-num">١</span></button>
+                    <button class="keypad-btn" data-num="2"><span class="keypad-num">2</span><span class="keypad-ar-num">٢</span></button>
+                    <button class="keypad-btn" data-num="3"><span class="keypad-num">3</span><span class="keypad-ar-num">٣</span></button>
+                    <button class="keypad-btn" data-num="4"><span class="keypad-num">4</span><span class="keypad-ar-num">٤</span></button>
+                    <button class="keypad-btn" data-num="5"><span class="keypad-num">5</span><span class="keypad-ar-num">٥</span></button>
+                    <button class="keypad-btn" data-num="6"><span class="keypad-num">6</span><span class="keypad-ar-num">٦</span></button>
+                    <button class="keypad-btn" data-num="7"><span class="keypad-num">7</span><span class="keypad-ar-num">٧</span></button>
+                    <button class="keypad-btn" data-num="8"><span class="keypad-num">8</span><span class="keypad-ar-num">٨</span></button>
+                    <button class="keypad-btn" data-num="9"><span class="keypad-num">9</span><span class="keypad-ar-num">٩</span></button>
+                    <button class="keypad-btn action-clear" id="phone-clear-btn">
+                        <!-- Red Trash / Backspace SVG -->
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                    <button class="keypad-btn" data-num="0"><span class="keypad-num">0</span><span class="keypad-ar-num">٠</span></button>
+                    <button class="keypad-btn" id="phone-backspace-btn">
+                        <!-- Backspace Arrow SVG -->
+                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Bottom action bars: GREEN forward, RED back -->
+                <div class="bottom-controls">
+                    <button class="btn-action btn-red" id="btn-phone-back" type="button">
+                        <!-- Back/Cancel X Icon -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-action btn-green" id="btn-phone-next" type="button" disabled>
+                        <!-- Big Forward Arrow SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 3: VOICE-OTP VERIFICATION ================= -->
+        <div id="screen-3" class="screen">
+            <div class="screen-content">
+                <!-- Ringing Phone Visual -->
+                <div class="ringing-animation">
+                    <div class="ring-wave"></div>
+                    <div class="ring-wave"></div>
+                    <div class="ring-wave"></div>
+                    <!-- Vintage / Ringing telephone SVG -->
+                    <svg class="ringing-phone-icon" viewBox="0 0 24 24">
+                        <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.57-.35-.12-.74-.03-1.01.24l-1.57 1.57c-2.83-1.44-5.15-3.76-6.59-6.59l1.57-1.57c.27-.27.35-.65.24-1.01-.38-1.11-.57-2.3-.57-3.53 0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.87c0-.55-.45-1-1-1z"/>
+                    </svg>
+                </div>
+                
+                <h1 class="screen-title">رمز التأكيد الصوتي</h1>
+                <p class="screen-subtitle">استمع للمكالمة، واكتب الأربعة أرقام</p>
+
+                <!-- Ear Helper Icon & Custom Numeric Display -->
+                <div class="input-display-container">
+                    <div class="numeric-display" id="otp-display">
+                        <span id="otp-text"></span><span class="cursor-blink"></span>
+                    </div>
+                </div>
+
+                <!-- Custom Keypad for OTP -->
+                <div class="custom-keypad" id="otp-keypad">
+                    <button class="keypad-btn" data-num="1"><span class="keypad-num">1</span><span class="keypad-ar-num">١</span></button>
+                    <button class="keypad-btn" data-num="2"><span class="keypad-num">2</span><span class="keypad-ar-num">٢</span></button>
+                    <button class="keypad-btn" data-num="3"><span class="keypad-num">3</span><span class="keypad-ar-num">٣</span></button>
+                    <button class="keypad-btn" data-num="4"><span class="keypad-num">4</span><span class="keypad-ar-num">٤</span></button>
+                    <button class="keypad-btn" data-num="5"><span class="keypad-num">5</span><span class="keypad-ar-num">٥</span></button>
+                    <button class="keypad-btn" data-num="6"><span class="keypad-num">6</span><span class="keypad-ar-num">٦</span></button>
+                    <button class="keypad-btn" data-num="7"><span class="keypad-num">7</span><span class="keypad-ar-num">٧</span></button>
+                    <button class="keypad-btn" data-num="8"><span class="keypad-num">8</span><span class="keypad-ar-num">٨</span></button>
+                    <button class="keypad-btn" data-num="9"><span class="keypad-num">9</span><span class="keypad-ar-num">٩</span></button>
+                    <button class="keypad-btn action-clear" id="otp-clear-btn">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
+                    <button class="keypad-btn" data-num="0"><span class="keypad-num">0</span><span class="keypad-ar-num">٠</span></button>
+                    <button class="keypad-btn" id="otp-backspace-btn">
+                        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+                    </button>
+                </div>
+
+                <!-- Bottom action bars: GREEN checkmark, RED back -->
+                <div class="bottom-controls">
+                    <button class="btn-action btn-red" id="btn-otp-back" type="button">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </button>
+                    <button class="btn-action btn-green" id="btn-otp-next" type="button" disabled>
+                        <!-- Big Checkmark SVG -->
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= SCREEN 4: WAITLIST SUCCESS ================= -->
+        <div id="screen-4" class="screen">
+            <div class="screen-content">
+                <!-- Giant success checkmark -->
+                <div class="success-checkmark">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                    </svg>
+                </div>
+
+                <!-- Velvet Rope / Queue Lock Visual -->
+                <svg class="velvet-rope-graphic" viewBox="0 0 24 24">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+
+                <h1 class="screen-title" style="font-size: 28px; color: var(--action-green);">تم التسجيل بنجاح!</h1>
+                
+                <!-- Helper Subtitle for the nephew to read -->
+                <p class="screen-subtitle" style="font-size: 18px; color: var(--text-light); text-align: center; max-width: 90%; line-height: 1.6; margin-top: 10px;">
+                    تم التسجيل في قائمة الانتظار.<br>سنقوم بالاتصال بك قريباً.
+                </p>
+                
+                <p class="screen-subtitle" style="font-size: 14px; opacity: 0.5; margin-top: 20px;">
+                    مصلحة رزق — خطوة نحو تأمين رزقك
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Routing & UI Interaction Script -->
+    <script>
+        // --- State Management ---
+        const state = {
+            step: 1,
+            identity: null, // Factory, Workshop, Project Manager, Gallery
+            phoneNumber: '',
+            otpCode: '',
+        };
+
+        // --- DOM Elements ---
+        const screens = {
+            1: document.getElementById('screen-1'),
+            2: document.getElementById('screen-2'),
+            3: document.getElementById('screen-3'),
+            4: document.getElementById('screen-4'),
+        };
+
+        const dots = document.querySelectorAll('.dot');
+        const phoneDisplay = document.getElementById('phone-text');
+        const otpDisplay = document.getElementById('otp-text');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const toast = document.getElementById('toast');
+
+        // Buttons
+        const btnPhoneNext = document.getElementById('btn-phone-next');
+        const btnPhoneBack = document.getElementById('btn-phone-back');
+        const btnOtpNext = document.getElementById('btn-otp-next');
+        const btnOtpBack = document.getElementById('btn-otp-back');
+
+        // Sound Simulation (Haptic or simple audio beeps using Web Audio API)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(type = 'tap') {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                if (type === 'tap') {
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime); // High pitch tap
+                    gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.08);
+                } else if (type === 'success') {
+                    // Delightful double-beep
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.35);
+                } else if (type === 'error') {
+                    // Low buzz
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {
+                // AudioContext blocked or unsupported
+            }
+        }
+
+        // --- Screen Router ---
+        function navigateToStep(targetStep) {
+            playBeep('tap');
+            
+            // Remove active classes
+            Object.keys(screens).forEach(step => {
+                screens[step].classList.remove('active');
+            });
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            // Set new active step
+            state.step = targetStep;
+            screens[targetStep].classList.add('active');
+            
+            // Highlight progress indicators
+            for (let i = 1; i <= targetStep; i++) {
+                const activeDot = document.querySelector(`.dot[data-step="${i}"]`);
+                if (activeDot) activeDot.classList.add('active');
+            }
+
+            // Screen Specific Init
+            if (targetStep === 3) {
+                startRingingPhoneSound();
+            } else {
+                stopRingingPhoneSound();
+            }
+        }
+
+        // Toast feedback trigger
+        function showToast(message, isError = true) {
+            playBeep(isError ? 'error' : 'tap');
+            toast.textContent = message;
+            toast.style.background = isError ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Screen 1: Identity Selection ---
+        document.querySelectorAll('.grid-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.identity = btn.getAttribute('data-identity');
+                navigateToStep(2);
+            });
+        });
+
+        // --- Screen 2: Phone Input Dialer ---
+        document.querySelectorAll('#phone-keypad [data-num]').forEach(key => {
+            key.addEventListener('click', () => {
+                playBeep('tap');
+                if (state.phoneNumber.length < 11) {
+                    state.phoneNumber += key.getAttribute('data-num');
+                    updatePhoneDisplay();
+                }
+            });
+        });
+
+        document.getElementById('phone-backspace-btn').addEventListener('click', () => {
+            playBeep('tap');
+            state.phoneNumber = state.phoneNumber.slice(0, -1);
+            updatePhoneDisplay();
+        });
+
+        document.getElementById('phone-clear-btn').addEventListener('click', () => {
+            playBeep('error');
+            state.phoneNumber = '';
+            updatePhoneDisplay();
+        });
+
+        function updatePhoneDisplay() {
+            // Display digits clearly
+            phoneDisplay.textContent = state.phoneNumber;
+            
+            // Enforce strictly 11 digits starting with 01
+            const isValid = state.phoneNumber.length === 11 && state.phoneNumber.startsWith('01');
+            btnPhoneNext.disabled = !isValid;
+        }
+
+        btnPhoneBack.addEventListener('click', () => {
+            state.phoneNumber = '';
+            updatePhoneDisplay();
+            navigateToStep(1);
+        });
+
+        btnPhoneNext.addEventListener('click', () => {
+            if (state.phoneNumber.length !== 11 || !state.phoneNumber.startsWith('01')) {
+                showToast('يرجى إدخال رقم هاتف مصري صحيح (١١ رقمًا يبدأ بـ ٠١)');
+                return;
+            }
+            // Transition to Verification Screen
+            navigateToStep(3);
+        });
+
+
+        // --- Screen 3: Voice OTP Verification ---
+        let ringingOscillator = null;
+        let ringingInterval = null;
+
+        function startRingingPhoneSound() {
+            // Simulate a ringing sound periodically to cue the user
+            let ringCount = 0;
+            const playRingSound = () => {
+                try {
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const osc1 = audioCtx.createOscillator();
+                    const osc2 = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    
+                    osc1.frequency.value = 440;
+                    osc2.frequency.value = 480;
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    gain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.06, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime + 1.2);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.6);
+                    
+                    osc1.start();
+                    osc2.start();
+                    osc1.stop(audioCtx.currentTime + 1.8);
+                    osc2.stop(audioCtx.currentTime + 1.8);
+                } catch(e){}
+            };
+
+            playRingSound();
+            ringingInterval = setInterval(() => {
+                if (state.step === 3) {
+                    playRingSound();
+                } else {
+                    clearInterval(ringingInterval);
+                }
+            }, 3000);
+        }
+
+        function stopRingingPhoneSound() {
+            if (ringingInterval) {
+                clearInterval(ringingInterval);
+                ringingInterval = null;
+            }
+        }
+
+        document.querySelectorAll('#otp-keypad [data-num]').forEach(key => {
+            key.addEventListener('click', () => {
+                playBeep('tap');
+                if (state.otpCode.length < 4) {
+                    state.otpCode += key.getAttribute('data-num');
+                    updateOtpDisplay();
+                }
+            });
+        });
+
+        document.getElementById('otp-backspace-btn').addEventListener('click', () => {
+            playBeep('tap');
+            state.otpCode = state.otpCode.slice(0, -1);
+            updateOtpDisplay();
+        });
+
+        document.getElementById('otp-clear-btn').addEventListener('click', () => {
+            playBeep('error');
+            state.otpCode = '';
+            updateOtpDisplay();
+        });
+
+        function updateOtpDisplay() {
+            otpDisplay.textContent = state.otpCode;
+            btnOtpNext.disabled = state.otpCode.length !== 4;
+        }
+
+        btnOtpBack.addEventListener('click', () => {
+            state.otpCode = '';
+            updateOtpDisplay();
+            navigateToStep(2);
+        });
+
+        btnOtpNext.addEventListener('click', async () => {
+            if (state.otpCode.length !== 4) {
+                showToast('يرجى إدخال الكود المكون من ٤ أرقام');
+                return;
+            }
+
+            // Trigger registration with backend API
+            loadingOverlay.classList.add('active');
+
+            // Generate an automatic descriptive name depending on selected role
+            let defaultName = 'مستخدم جديد';
+            if (state.identity === 'Factory') defaultName = 'صاحب مصنع';
+            if (state.identity === 'Workshop') defaultName = 'صاحب ورشة';
+            if (state.identity === 'Project Manager') defaultName = 'سائق نقل ثقيل';
+            if (state.identity === 'Gallery') defaultName = 'صاحب معرض';
+            if (state.identity === 'Craftsman') defaultName = 'صنايعي';
+            if (state.identity === 'Worker') defaultName = 'عامل';
+
+            try {
+                const response = await fetch('/auth/register_or_login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        phone_number: state.phoneNumber,
+                        name: defaultName,
+                        account_type: state.identity
+                    })
+                });
+
+                loadingOverlay.classList.remove('active');
+
+                if (response.ok) {
+                    playBeep('success');
+                    navigateToStep(4);
+                } else {
+                    const errData = await response.json();
+                    let errMsg = 'حدث خطأ أثناء التسجيل. حاول مرة أخرى.';
+                    if (errData && errData.detail) {
+                        if (Array.isArray(errData.detail)) {
+                            errMsg = errData.detail.map(d => d.msg).join(', ');
+                        } else {
+                            errMsg = errData.detail;
+                        }
+                    }
+                    showToast(errMsg);
+                }
+            } catch (err) {
+                loadingOverlay.classList.remove('active');
+                showToast('عذرًا، حدث خطأ في الاتصال بالخادم.');
+            }
+        });
+
+        // Initialize display state
+        updatePhoneDisplay();
+        updateOtpDisplay();
+    </script>
+</body>
+</html>
